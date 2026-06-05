@@ -1,0 +1,53 @@
+name: CD (Publish to npm)
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        type: choice
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+          - none
+      preid:
+        description: "Pre-release id (e.g. beta, rc). Leave blank for stable"
+        required: false
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+  id-token: write # for npm provenance and SBOM attestations
+  attestations: write
+
+jobs:
+  select-runner:
+    uses: Plasius-LTD/plasius-ltd-site/.github/workflows/package-runner.yml@main
+    permissions:
+      actions: read
+      contents: read
+    secrets: inherit
+
+  publish:
+    needs: select-runner
+    runs-on: ${{ fromJSON(needs.select-runner.outputs.runner_labels) }}
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Publish package
+        uses: Plasius-LTD/plasius-ltd-site/.github/actions/package-publish@main
+        with:
+          bump: ${{ inputs.bump }}
+          preid: ${{ inputs.preid }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

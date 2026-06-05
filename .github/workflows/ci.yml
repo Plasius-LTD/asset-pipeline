@@ -1,0 +1,16 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  build-test:
+    uses: Plasius-LTD/plasius-ltd-site/.github/workflows/package-ci.yml@main
+    secrets: inherit
