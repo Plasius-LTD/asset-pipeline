@@ -19,7 +19,7 @@ This package is part of the unified AI asset pipeline package family. It is scaf
 ## Related Documents
 
 - plasius-ltd-site `docs/Design/unified-ai-asset-pipeline.md`
-- plasius-ltd-site `docs/adrs/adr-0069-unified-ai-asset-pipeline-packages.md`
+- plasius-ltd-site `docs/adrs/adr-0084-unified-ai-asset-pipeline-packages.md`
 - plasius-ltd-site `docs/tdrs/tdr-0004-unified-ai-asset-pipeline.md`
 
 ## Development
