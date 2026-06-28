@@ -6,7 +6,7 @@
   - (placeholder)
 
 - **Changed**
-  - (placeholder)
+  - Refreshed development dependency baselines to `@types/node@26.0.1` and `eslint@10.6.0`.
 
 - **Fixed**
   - (placeholder)

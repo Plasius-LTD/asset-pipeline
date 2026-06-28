@@ -61,14 +61,13 @@
     "url": "https://github.com/Plasius-LTD/asset-pipeline/issues"
   },
   "homepage": "https://github.com/Plasius-LTD/asset-pipeline#readme",
-  "dependencies": {},
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^25.7.0",
+    "@types/node": "^26.0.1",
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
     "@vitest/coverage-v8": "^4.1.6",
-    "eslint": "^10.3.0",
+    "eslint": "^10.6.0",
     "globals": "^17.6.0",
     "rimraf": "^6.1.3",
     "tsup": "^8.5.1",
