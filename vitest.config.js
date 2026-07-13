@@ -9,6 +9,7 @@ export default defineConfig({
     coverage: {
       all: false,
       provider: "v8",
+      include: ["src/**/*.ts"],
       reporter: ["text", "json", "html", "lcov"],
       reportsDirectory: "./coverage",
       exclude: [
@@ -23,8 +24,8 @@ export default defineConfig({
       thresholds: {
         lines: 80,
         functions: 80,
-        statements: 75,
-        branches: 60,
+        statements: 80,
+        branches: 80,
       },
     },
   },
