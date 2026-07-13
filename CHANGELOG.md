@@ -3,6 +3,20 @@
 ## Unreleased
 
 - **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.3.0] - 2026-07-13
+
+- **Added**
   - Added a Node-only WGSL shader lifecycle planning surface for direct
     same-process admission-receipt revalidation, ordered interface/evidence/
     shader publication, exact promoted style-profile references, deterministic
@@ -128,3 +142,4 @@
 [0.1.5]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.1.5
 [0.1.6]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.1.6
 [0.2.0]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.2.0
+[0.3.0]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.3.0
