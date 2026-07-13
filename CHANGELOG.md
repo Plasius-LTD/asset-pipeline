@@ -9,7 +9,9 @@
   - (placeholder)
 
 - **Fixed**
-  - (placeholder)
+  - Regenerated npm peer-dependency lock metadata and aligned CI with the
+    release workflow clean-install command so hosted release installs remain
+    reproducible.
 
 - **Security**
   - (placeholder)
