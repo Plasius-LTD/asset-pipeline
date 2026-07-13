@@ -6,6 +6,11 @@ export default defineConfig({
     globals: true,
     include: ["tests/**/*.test.{ts,tsx}"],
     passWithNoTests: false,
+    server: {
+      deps: {
+        inline: ["@plasius/asset-processing"],
+      },
+    },
     coverage: {
       all: false,
       provider: "v8",
