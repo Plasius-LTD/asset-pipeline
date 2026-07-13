@@ -1056,4 +1056,353 @@ describe("model resolution workflow planning", () => {
       MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_EVENT,
     );
   });
+
+  it("rejects malformed public inputs and corrupted persisted planner metadata", () => {
+    expectPlanningCode(
+      () => createModelResolutionWorkflowPlan(null as never),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => createModelResolutionWorkflowPlan({
+        resolutionId: "resolution-1",
+        request: {} as never,
+        createdAt: INITIAL_AT,
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => createModelResolutionWorkflowPlan({
+        resolutionId: "..",
+        request: createRequest(),
+        createdAt: INITIAL_AT,
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => createModelResolutionWorkflowPlan({
+        resolutionId: "resolution-1",
+        request: createRequest(),
+        createdAt: null as never,
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_TIMESTAMP,
+    );
+    expectPlanningCode(
+      () => planCatalog([], ["provider with spaces"]),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planCatalog([], PROVIDERS, ["one", "two", "three", "four"]),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planCatalog([], PROVIDERS, [" "]),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+
+    const searching = planCatalog([]);
+    for (const rankedCandidates of [
+      [null],
+      [{ providerId: "polyhaven", sourceAssetId: "source-1", candidateId: "candidate-1", extra: true }],
+      [{ providerId: "polyhaven", sourceAssetId: "source:invalid", candidateId: "candidate-1" }],
+      [{ providerId: "polyhaven", sourceAssetId: "source-1", candidateId: ".." }],
+    ]) {
+      expectPlanningCode(
+        () => planModelResolutionEvent(searching, {
+          type: "provider-search-completed",
+          occurredAt: at(8),
+          rankedCandidates,
+        } as never),
+        MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+      );
+    }
+
+    expectPlanningCode(
+      () => planModelResolutionCancellation(null as never, {
+        cancelledAt: at(8),
+        reasonCode: "requester-cancelled",
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planModelResolutionCancellation({
+        ...createInitialPlan(),
+        configuredProviderIds: null as never,
+      }, {
+        cancelledAt: at(8),
+        reasonCode: "requester-cancelled",
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planModelResolutionCancellation({
+        ...createInitialPlan(),
+        providersExhausted: "no" as never,
+      }, {
+        cancelledAt: at(8),
+        reasonCode: "requester-cancelled",
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planModelResolutionCancellation({
+        ...createInitialPlan(),
+        configuredProviderIds: ["sketchfab"],
+        providerAuthorizationAttemptedIds: ["sketchfab"],
+        awaitingProviderId: "sketchfab",
+      }, {
+        cancelledAt: at(8),
+        reasonCode: "requester-cancelled",
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planModelResolutionCancellation({
+        ...createInitialPlan(),
+        providerAuthorizationAttemptedIds: ["sketchfab"],
+      }, {
+        cancelledAt: at(8),
+        reasonCode: "requester-cancelled",
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+
+    const reference = {
+      providerId: "polyhaven",
+      sourceAssetId: "source-corrupt",
+      candidateId: "candidate-corrupt",
+    } as const;
+    const queued = planModelResolutionEvent(searching, {
+      type: "provider-search-completed",
+      occurredAt: at(8),
+      rankedCandidates: [reference],
+    });
+    expectPlanningCode(
+      () => planModelResolutionCancellation({
+        ...queued,
+        activeProviderCandidate: reference,
+      }, {
+        cancelledAt: at(9),
+        reasonCode: "requester-cancelled",
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planModelResolutionCancellation({
+        ...searching,
+        plannedProviderCandidates: [{ ...reference, providerId: "unconfigured" }],
+      }, {
+        cancelledAt: at(9),
+        reasonCode: "requester-cancelled",
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planModelResolutionCancellation({
+        ...queued,
+        pendingProviderCandidates: [{ ...reference, sourceAssetId: "different-source" }],
+      }, {
+        cancelledAt: at(9),
+        reasonCode: "requester-cancelled",
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+
+    const catalogCandidate = createCandidate({ candidateId: "candidate-catalog-collision" });
+    const catalogAwaiting = planCatalog([catalogCandidate]);
+    expectPlanningCode(
+      () => planModelResolutionCancellation({
+        ...catalogAwaiting,
+        plannedProviderCandidates: [{
+          providerId: "polyhaven",
+          sourceAssetId: "source-catalog-collision",
+          candidateId: catalogCandidate.candidateId,
+        }],
+      }, {
+        cancelledAt: at(9),
+        reasonCode: "requester-cancelled",
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+
+    const proposedReference = {
+      providerId: "polyhaven",
+      sourceAssetId: "source-proposed",
+      candidateId: "candidate-proposed",
+    } as const;
+    const proposedAwaiting = planModelResolutionEvent(
+      planProviderToEvaluation([proposedReference]),
+      {
+        type: "candidate-evaluated",
+        occurredAt: at(13),
+        candidate: createProviderCandidate(proposedReference),
+        providersExhausted: true,
+      },
+    );
+    expectPlanningCode(
+      () => planModelResolutionCancellation({
+        ...proposedAwaiting,
+        plannedProviderCandidates: [],
+      }, {
+        cancelledAt: at(14),
+        reasonCode: "requester-cancelled",
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+  });
+
+  it("covers fail-closed event correlation and rights-review boundaries", () => {
+    expectPlanningCode(
+      () => planModelResolutionEvent(createInitialPlan(), null as never),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_EVENT,
+    );
+    expectPlanningCode(
+      () => planModelResolutionEvent(createInitialPlan(), {
+        type: "catalog-search-completed",
+        occurredAt: at(7),
+        candidates: [],
+        providerIds: null,
+      } as never),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planModelResolutionEvent(createInitialPlan(), {
+        type: "provider-search-completed",
+        occurredAt: at(7),
+        rankedCandidates: [],
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_EVENT,
+    );
+
+    const duplicateHigh = createCandidate({ candidateId: "candidate-duplicate", assurance: "high" });
+    const duplicateLow = createCandidate({ candidateId: "candidate-duplicate", assurance: "low" });
+    expectPlanningCode(
+      () => planCatalog([duplicateHigh, duplicateLow]),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planCatalog([createCandidate({ assurance: "low" })], [], []),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+
+    const first = {
+      providerId: "polyhaven",
+      sourceAssetId: "source-first-boundary",
+      candidateId: "candidate-first-boundary",
+    } as const;
+    const second = {
+      providerId: "kenney",
+      sourceAssetId: "source-second-boundary",
+      candidateId: "candidate-second-boundary",
+    } as const;
+    const queued = planModelResolutionEvent(planCatalog([]), {
+      type: "provider-search-completed",
+      occurredAt: at(8),
+      rankedCandidates: [first, second],
+    });
+    expectPlanningCode(
+      () => planModelResolutionEvent({
+        ...queued,
+        activeProviderCandidate: first,
+        pendingProviderCandidates: [second],
+      }, {
+        type: "provider-download-ready",
+        occurredAt: at(9),
+        candidate: second,
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_EVENT,
+    );
+
+    const quarantining = planModelResolutionEvent(queued, {
+      type: "provider-download-ready",
+      occurredAt: at(9),
+      candidate: first,
+    });
+    expectPlanningCode(
+      () => planModelResolutionEvent(quarantining, {
+        type: "quarantine-completed",
+        occurredAt: at(10),
+        candidateId: second.candidateId,
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_EVENT,
+    );
+
+    const evaluating = advanceProviderToEvaluation(queued, first, 9);
+    expectPlanningCode(
+      () => planModelResolutionEvent(evaluating, {
+        type: "candidate-evaluated",
+        occurredAt: at(13),
+        candidate: createProviderCandidate(first, { assurance: "low" }),
+        providersExhausted: true,
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_EVENT,
+    );
+
+    const quarantined = createProviderCandidate(first, {
+      assurance: "low",
+      rightsStatus: "quarantined",
+    });
+    const rightsPlan = planModelResolutionEvent(evaluating, {
+      type: "candidate-evaluated",
+      occurredAt: at(13),
+      candidate: quarantined,
+      providersExhausted: false,
+    });
+    expectPlanningCode(
+      () => planModelResolutionEvent(rightsPlan, {
+        type: "rights-review-completed",
+        occurredAt: at(14),
+        candidate: createRightsReviewedCandidate(quarantined),
+        providersExhausted: undefined,
+      } as never),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planModelResolutionEvent(rightsPlan, {
+        type: "rights-review-completed",
+        occurredAt: at(14),
+        candidate: createRightsReviewedCandidate(
+          quarantined,
+          "2026-07-13T12:05:00.000Z",
+        ),
+        providersExhausted: false,
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_TIMESTAMP,
+    );
+    expectPlanningCode(
+      () => planModelResolutionEvent({
+        ...rightsPlan,
+        providersExhausted: true,
+      }, {
+        type: "rights-review-completed",
+        occurredAt: at(14),
+        candidate: createRightsReviewedCandidate(quarantined),
+        providersExhausted: true,
+      }),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_EVENT,
+    );
+
+    const reviewedLow = planModelResolutionEvent(rightsPlan, {
+      type: "rights-review-completed",
+      occurredAt: at(14),
+      candidate: createRightsReviewedCandidate(quarantined),
+      providersExhausted: false,
+      refinementQuestions: ["Which proportions are essential?"],
+    });
+    expect(reviewedLow.resolution.state).toBe("searching-providers");
+
+    expectPlanningCode(
+      () => planModelResolutionCancellation(createInitialPlan(), null as never),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+    expectPlanningCode(
+      () => planModelResolutionRetry(
+        planModelResolutionEvent(planCatalog([]), {
+          type: "providers-exhausted",
+          occurredAt: at(9),
+        }),
+        null as never,
+      ),
+      MODEL_RESOLUTION_PLANNING_ERROR_CODES.INVALID_INPUT,
+    );
+  });
 });
