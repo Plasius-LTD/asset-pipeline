@@ -1,6 +1,8 @@
 export const ASSET_PIPELINE_PACKAGE = "@plasius/asset-pipeline";
 export const ASSET_PIPELINE_FEATURE_FLAG_ID = "asset.pipeline.unified-ai-assets.enabled";
 
+export * from "./model-resolution.js";
+
 export const PIPELINE_STATES = Object.freeze([
   "requested",
   "intake-uploaded",

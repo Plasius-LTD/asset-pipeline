@@ -3,7 +3,9 @@
 ## Unreleased
 
 - **Added**
-  - (placeholder)
+  - Added canonical, immutable model-resolution state and effect planning for
+    catalog search, bounded provider acquisition, review, confirmation,
+    promotion handoff, retries, cancellation, and Phase 1 provider exhaustion.
 
 - **Changed**
   - (placeholder)

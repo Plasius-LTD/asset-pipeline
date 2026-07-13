@@ -156,6 +156,27 @@ jobs:
             exit 1
           }
 
+      - name: Require every changed TypeScript source file in LCOV
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE_SHA:-}" ] || printf '%s' "${BASE_SHA}" | grep -Eq '^0+$' || ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            mapfile -t CHANGED_SOURCES < <(git ls-files 'src/*.ts' 'src/**/*.ts' | awk '!/\.d\.(c|m)?ts$/')
+          else
+            mapfile -t CHANGED_SOURCES < <(git diff --name-only --diff-filter=ACMR "${BASE_SHA}" "${GITHUB_SHA}" -- 'src/*.ts' 'src/**/*.ts' | awk '!/\.d\.(c|m)?ts$/')
+          fi
+
+          for source in "${CHANGED_SOURCES[@]}"; do
+            if ! awk -F: -v source="${source}" '$1 == "SF" { candidate=$2; gsub(/\\/, "/", candidate); start=length(candidate)-length(source)+1; if (candidate == source || (start > 1 && substr(candidate, start) == source && substr(candidate, start-1, 1) == "/")) found=1 } END { exit found ? 0 : 1 }' "${LCOV_FILE}"; then
+              echo "Changed source file is missing from LCOV: ${source}"
+              exit 1
+            fi
+          done
+
+      - name: Verify public package contents and exports
+        run: npm run pack:check
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
