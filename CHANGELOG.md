@@ -12,6 +12,9 @@
   - Regenerated npm peer-dependency lock metadata and aligned CI with the
     release workflow clean-install command so hosted release installs remain
     reproducible.
+  - Release retries now pin the workflow-dispatch commit and abort if `main`
+    advances, keeping version scope, tags, package bytes, and npm provenance
+    bound to one immutable source snapshot.
 
 - **Security**
   - (placeholder)
@@ -86,7 +89,6 @@
   - (placeholder)
 
 - **Fixed**
-  - Release retries now publish the current verified `main` snapshot, so lockfile or workflow recovery fixes landed after version preparation cannot be omitted from the artifact.
   - (placeholder)
 
 - **Security**

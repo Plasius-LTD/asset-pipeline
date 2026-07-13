@@ -124,7 +124,13 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git fetch origin "${BASE_BRANCH}" --tags
-          git checkout -B "${BASE_BRANCH}" "origin/${BASE_BRANCH}"
+          DISPATCH_SHA=$(git rev-parse "${GITHUB_SHA}^{commit}")
+          BASE_HEAD=$(git rev-parse "origin/${BASE_BRANCH}^{commit}")
+          if [ "${BASE_HEAD}" != "${DISPATCH_SHA}" ]; then
+            echo "${BASE_BRANCH} advanced from workflow-dispatch commit ${DISPATCH_SHA} to ${BASE_HEAD}; start a new CD workflow dispatch from the new head (the Re-run button retains the old commit)." >&2
+            exit 1
+          fi
+          git checkout -B "${BASE_BRANCH}" "${DISPATCH_SHA}"
 
           PACKAGE_DIRECTORY="${PACKAGE_DIRECTORY%/}"
           if [ -z "${PACKAGE_DIRECTORY}" ]; then
@@ -439,18 +445,14 @@ jobs:
           fi
 
           git fetch origin "${BASE_BRANCH}" --tags
-          git checkout -B "${BASE_BRANCH}" "origin/${BASE_BRANCH}"
-
-          MAIN_VERSION=$(PACKAGE_JSON_PATH="${PACKAGE_JSON}" node -p "const path = require('node:path'); const pkg = require(path.resolve(process.env.PACKAGE_JSON_PATH)); pkg.version || ''")
-          if [ "${MAIN_VERSION}" != "${TARGET_VER}" ]; then
-            echo "${BASE_BRANCH} has package version ${MAIN_VERSION}, expected ${TARGET_VER}." >&2
-            exit 1
-          fi
-
-          if ! grep -q "^## \[${TARGET_VER}\]" "${FILE}"; then
-            echo "${BASE_BRANCH} is missing ${FILE} release section ${TARGET_VER}." >&2
-            exit 1
-          fi
+          COMMIT_SHA=$(
+            DISPATCH_SHA="${DISPATCH_SHA}" \
+            BASE_BRANCH="${BASE_BRANCH}" \
+            PACKAGE_JSON="${PACKAGE_JSON}" \
+            CHANGELOG_PATH="${FILE}" \
+            TARGET_VERSION="${TARGET_VER}" \
+              node scripts/select-release-snapshot.cjs
+          )
 
           if npm view "${NAME}" version >/dev/null 2>&1; then
             FLAGS=""
@@ -475,11 +477,6 @@ jobs:
             fi
           fi
 
-          # Publish the verified base-branch snapshot, including any recovery
-          # fixes landed after version metadata was prepared. Selecting the
-          # last package.json commit can silently omit lockfile or workflow
-          # corrections from an incomplete release retry.
-          COMMIT_SHA=$(git rev-parse HEAD)
           {
             echo "name=${NAME}"
             echo "version=${TARGET_VER}"
