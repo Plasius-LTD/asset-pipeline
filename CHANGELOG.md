@@ -86,6 +86,7 @@
   - (placeholder)
 
 - **Fixed**
+  - Release retries now publish the current verified `main` snapshot, so lockfile or workflow recovery fixes landed after version preparation cannot be omitted from the artifact.
   - (placeholder)
 
 - **Security**

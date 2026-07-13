@@ -475,10 +475,11 @@ jobs:
             fi
           fi
 
-          COMMIT_SHA=$(git log -n 1 --format=%H -- "${PACKAGE_JSON}")
-          if [ -z "${COMMIT_SHA}" ]; then
-            COMMIT_SHA=$(git rev-parse HEAD)
-          fi
+          # Publish the verified base-branch snapshot, including any recovery
+          # fixes landed after version metadata was prepared. Selecting the
+          # last package.json commit can silently omit lockfile or workflow
+          # corrections from an incomplete release retry.
+          COMMIT_SHA=$(git rev-parse HEAD)
           {
             echo "name=${NAME}"
             echo "version=${TARGET_VER}"
