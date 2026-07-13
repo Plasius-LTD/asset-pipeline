@@ -3,6 +3,20 @@
 ## Unreleased
 
 - **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.2.0] - 2026-07-13
+
+- **Added**
   - Added canonical, immutable model-resolution state and effect planning for
     catalog search, bounded provider acquisition, review, confirmation,
     promotion handoff, retries, cancellation, and Phase 1 provider exhaustion.
@@ -68,3 +82,4 @@
 [0.1.4]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.1.4
 [0.1.5]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.1.5
 [0.1.6]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.1.6
+[0.2.0]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.2.0
