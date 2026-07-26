@@ -111,7 +111,10 @@
     "node": ">=24"
   },
   "overrides": {
-    "minimatch": "^10.2.1"
+    "brace-expansion": "5.0.8",
+    "esbuild": "$esbuild",
+    "minimatch": "^10.2.1",
+    "postcss": "8.5.23"
   },
   "dependencies": {
     "@plasius/asset-contracts": "^0.3.1",

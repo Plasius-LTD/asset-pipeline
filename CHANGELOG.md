@@ -9,6 +9,9 @@
   - (placeholder)
 
 - **Fixed**
+  - Gave the real-Git release snapshot integration test a dedicated bounded
+    execution budget and bounded every child process, avoiding false CI
+    failures under self-hosted runner contention without permitting hangs.
   - Regenerated npm peer-dependency lock metadata and aligned CI with the
     release workflow clean-install command so hosted release installs remain
     reproducible.
@@ -17,6 +20,8 @@
     bound to one immutable source snapshot.
 
 - **Security**
+  - Added fail-closed source and npm-package admission for the administrative contributor registry and pinned the CI/CD runtime to Node.js 24.18.0 LTS.
+  - Pinned patched transitive build-tool dependencies for the current npm audit advisories.
   - (placeholder)
 
 ## [0.3.0] - 2026-07-13
