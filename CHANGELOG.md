@@ -9,6 +9,9 @@
   - (placeholder)
 
 - **Fixed**
+  - Gave the real-Git release snapshot integration test a dedicated bounded
+    execution budget and bounded every child process, avoiding false CI
+    failures under self-hosted runner contention without permitting hangs.
   - Regenerated npm peer-dependency lock metadata and aligned CI with the
     release workflow clean-install command so hosted release installs remain
     reproducible.
