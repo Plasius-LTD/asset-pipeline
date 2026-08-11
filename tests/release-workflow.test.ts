@@ -178,6 +178,39 @@ describe("release snapshot selection", () => {
   );
 });
 
+describe("public release policy", () => {
+  it("publishes through the production OIDC trusted publisher without token fallbacks", async () => {
+    const workflow = await readFile(
+      new URL("../.github/workflows/cd.yml", import.meta.url),
+      "utf8"
+    );
+    const npmrc = await readFile(new URL("../.npmrc", import.meta.url), "utf8");
+
+    expect(workflow).toContain("runs-on: ubuntu-latest");
+    expect(workflow).toContain("environment: production");
+    expect(workflow).toContain("id-token: write");
+    expect(workflow).toContain("npm publish ${FLAGS} --provenance --registry https://registry.npmjs.org");
+    expect(workflow).toContain('gh run list --workflow ci.yml --commit "${COMMIT_SHA}"');
+    expect(workflow).toContain('.headSha == $sha and .conclusion == "success"');
+    expect(workflow).not.toMatch(/NPM_TOKEN|NODE_AUTH_TOKEN/u);
+    expect(npmrc).not.toMatch(/_authToken|NPM_TOKEN|NODE_AUTH_TOKEN/u);
+  });
+
+  it("keeps trusted CI explicit and prevents untrusted fork execution", async () => {
+    const workflow = await readFile(
+      new URL("../.github/workflows/ci.yml", import.meta.url),
+      "utf8"
+    );
+
+    expect(workflow).toContain("runs-on: [self-hosted, Linux, X64]");
+    expect(workflow).not.toContain("fromJSON(vars.");
+    expect(workflow).not.toContain("pull_request_target");
+    expect(workflow).toContain(
+      "github.event.pull_request.head.repo.full_name == github.repository"
+    );
+  });
+});
+
 function git(repository: string, ...args: string[]): string {
   return execFileSync("git", args, {
     cwd: repository,
