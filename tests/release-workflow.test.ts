@@ -81,14 +81,21 @@ describe("release snapshot selection", () => {
     ).toThrow(/missing the changelog release section 0\.3\.0/u);
   });
 
-  it("routes the reusable workflow through the tested immutable selector", async () => {
+  it("routes publication through an exact-main second workflow dispatch", async () => {
+    const cdWorkflow = await readFile(
+      new URL("../.github/workflows/cd.yml", import.meta.url),
+      "utf8"
+    );
     const workflow = await readFile(
       new URL("../.github/workflows/release-prepare.yml", import.meta.url),
       "utf8"
     );
 
-    expect(workflow).toContain("node scripts/select-release-snapshot.cjs");
-    expect(workflow).toContain('DISPATCH_SHA=$(git rev-parse "${GITHUB_SHA}^{commit}")');
+    expect(cdWorkflow).toContain('"phase": "publish"');
+    expect(cdWorkflow).toContain('"ref": "main"');
+    expect(cdWorkflow).toContain("expected_commit_sha");
+    expect(cdWorkflow).toContain("actions/workflows/cd.yml/dispatches");
+    expect(workflow).toContain("COMMIT_SHA=$(git rev-parse HEAD)");
     expect(workflow).not.toContain(
       'COMMIT_SHA=$(git log -n 1 --format=%H -- "${PACKAGE_JSON}")'
     );
@@ -189,7 +196,7 @@ describe("public release policy", () => {
     expect(workflow).toContain("runs-on: ubuntu-latest");
     expect(workflow).toContain("environment: production");
     expect(workflow).toContain("id-token: write");
-    expect(workflow).toContain("npm publish ${FLAGS} --provenance --registry https://registry.npmjs.org");
+    expect(workflow).toContain('npm publish "./${TARBALL}" --ignore-scripts');
     expect(workflow).toContain("Enforce exact-main successful CI");
     expect(workflow).toContain("refs/remotes/origin/main");
     expect(workflow).toContain("-f branch=main");
