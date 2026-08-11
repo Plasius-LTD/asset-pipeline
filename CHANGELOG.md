@@ -6,6 +6,7 @@
   - (placeholder)
 
 - **Changed**
+  - Updated npm publication to use only GitHub OIDC trusted publishing from the production environment with job-scoped permissions.
   - (placeholder)
 
 - **Fixed**
@@ -21,6 +22,7 @@
 
 - **Security**
   - Added fail-closed source and npm-package admission for the administrative contributor registry and pinned the CI/CD runtime to Node.js 24.18.0 LTS.
+  - Removed the repository's long-lived npm write-token fallback from `.npmrc` and the publish workflow.
   - Pinned patched transitive build-tool dependencies for the current npm audit advisories.
   - (placeholder)
 

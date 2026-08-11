@@ -313,6 +313,19 @@ Apache-2.0
 CI keeps the administrative contributor registry outside Git and npm package
 artifacts using exact, case-normalised path checks. CI runs on approved
 self-hosted runners. Release preparation and npm publication use GitHub-hosted
-runners with Node.js 24.18.0 LTS. CD remains disabled until the npm trusted
-publisher binding is verified and the legacy token fallback is removed.
+runners with Node.js 24.18.0 LTS. The publish job is gated by the `production`
+environment and uses npm OIDC trusted publishing with `id-token: write`; no
+long-lived npm write token is accepted by the repository workflow or `.npmrc`.
+
+To cut the next stable patch from `main`, dispatch `.github/workflows/cd.yml`
+with `bump=patch` and a blank `preid`. The release-preparation job selects a
+version higher than the package manifest, npm registry, and existing tags. At
+the current `0.3.0` release state, that allocates `0.3.1` and never reuses the
+published `0.3.0` version. Release publication remains bound to the exact
+prepared commit that passed CI.
+
+Rollback is operational: cancel or disable the affected CD workflow/channel,
+leave immutable npm and GitHub release artifacts untouched, and restore service
+from the last known-good version. The removed administrative registry path is
+never restored as part of rollback.
 <!-- END PLASIUS RELEASE INTEGRITY -->

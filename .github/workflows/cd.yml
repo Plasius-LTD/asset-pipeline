@@ -20,9 +20,7 @@ on:
 
 permissions:
   actions: read
-  attestations: write
   contents: write
-  id-token: write
   pull-requests: write
 
 concurrency:
@@ -40,6 +38,11 @@ jobs:
 
   publish:
     needs: prepare_release
+    permissions:
+      actions: read
+      attestations: write
+      contents: write
+      id-token: write
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -78,6 +81,35 @@ jobs:
             echo "should_finalize_release=true"
             echo "skip_reason=${SKIP_REASON}"
           } >> "$GITHUB_OUTPUT"
+
+      - name: Verify exact-SHA CI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ needs.prepare_release.outputs.commit_sha }}
+        run: |
+          set -euo pipefail
+
+          DEADLINE=$((SECONDS + 1200))
+          while [ "${SECONDS}" -lt "${DEADLINE}" ]; do
+            RUNS="$(gh run list --workflow ci.yml --commit "${COMMIT_SHA}" --limit 20 --json databaseId,status,conclusion,headSha,event)"
+
+            if jq -e --arg sha "${COMMIT_SHA}" '[.[] | select(.headSha == $sha and .conclusion == "success")] | length > 0' <<< "${RUNS}" >/dev/null; then
+              echo "CI succeeded for exact prepared commit ${COMMIT_SHA}."
+              exit 0
+            fi
+
+            if jq -e --arg sha "${COMMIT_SHA}" '[.[] | select(.headSha == $sha and ((.conclusion // "") == "failure" or (.conclusion // "") == "cancelled" or (.conclusion // "") == "timed_out" or (.conclusion // "") == "startup_failure" or (.conclusion // "") == "action_required"))] | length > 0' <<< "${RUNS}" >/dev/null; then
+              echo "CI failed for exact prepared commit ${COMMIT_SHA}." >&2
+              jq -r --arg sha "${COMMIT_SHA}" '.[] | select(.headSha == $sha) | "run=\(.databaseId) status=\(.status) conclusion=\(.conclusion // "pending") event=\(.event)"' <<< "${RUNS}" >&2
+              exit 1
+            fi
+
+            echo "Waiting for CI on exact prepared commit ${COMMIT_SHA}."
+            sleep 15
+          done
+
+          echo "Timed out waiting for CI on exact prepared commit ${COMMIT_SHA}." >&2
+          exit 1
 
       - name: Skip when package version is already published
         if: steps.release.outputs.should_publish_npm != 'true'
@@ -230,17 +262,11 @@ jobs:
       - name: Publish package
         if: steps.release.outputs.should_publish_npm == 'true'
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           FLAGS: ${{ steps.release.outputs.flags }}
           PACKAGE_NAME: ${{ steps.release.outputs.package_name }}
           PACKAGE_VERSION: ${{ steps.release.outputs.release_version }}
         run: |
           set -euo pipefail
-          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
-            echo "NPM_TOKEN is required" >&2
-            exit 1
-          fi
-
           if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version --registry https://registry.npmjs.org >/dev/null 2>&1; then
             echo "${PACKAGE_NAME}@${PACKAGE_VERSION} already exists on npm; skipping duplicate publish."
             exit 0
