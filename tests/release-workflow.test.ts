@@ -210,6 +210,7 @@ describe("public release policy", () => {
     );
 
     expect(workflow).toContain("runs-on: [self-hosted, Linux, X64]");
+    expect(workflow).toContain("pull_request:");
     expect(workflow).not.toContain("fromJSON(vars.");
     expect(workflow).not.toContain("pull_request_target");
     expect(workflow).toContain(
