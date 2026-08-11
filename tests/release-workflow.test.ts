@@ -190,8 +190,15 @@ describe("public release policy", () => {
     expect(workflow).toContain("environment: production");
     expect(workflow).toContain("id-token: write");
     expect(workflow).toContain("npm publish ${FLAGS} --provenance --registry https://registry.npmjs.org");
-    expect(workflow).toContain('gh run list --workflow ci.yml --commit "${COMMIT_SHA}"');
-    expect(workflow).toContain('.headSha == $sha and .conclusion == "success"');
+    expect(workflow).toContain("Enforce exact-main successful CI");
+    expect(workflow).toContain("refs/remotes/origin/main");
+    expect(workflow).toContain("-f branch=main");
+    expect(workflow).toContain("-f event=push");
+    expect(workflow).toContain('-f head_sha="${EXPECTED_SHA}"');
+    expect(workflow).toContain('conclusion == "success"');
+    expect(workflow).toContain("Verify release runtime");
+    expect(workflow).toContain('ACTUAL_NODE%%.*');
+    expect(workflow).toContain('"11.5.1"');
     expect(workflow).not.toMatch(/NPM_TOKEN|NODE_AUTH_TOKEN/u);
     expect(npmrc).not.toMatch(/_authToken|NPM_TOKEN|NODE_AUTH_TOKEN/u);
   });

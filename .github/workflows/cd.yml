@@ -52,12 +52,90 @@ jobs:
           ref: ${{ needs.prepare_release.outputs.commit_sha }}
           fetch-depth: 0
 
+      - name: Enforce exact-main successful CI
+        env:
+          EXPECTED_SHA: ${{ needs.prepare_release.outputs.commit_sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if ! printf '%s' "${EXPECTED_SHA}" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "Release preparation did not return a full commit SHA." >&2
+            exit 1
+          fi
+
+          git fetch origin main --no-tags
+          REMOTE_MAIN="$(git rev-parse refs/remotes/origin/main)"
+          if [ "${REMOTE_MAIN}" != "${EXPECTED_SHA}" ]; then
+            echo "main moved from prepared commit ${EXPECTED_SHA} to ${REMOTE_MAIN}; refusing publication." >&2
+            exit 1
+          fi
+
+          DEADLINE=$((SECONDS + 1800))
+          MATCHES=0
+          while [ "${SECONDS}" -lt "${DEADLINE}" ]; do
+            RUNS="$(
+              gh api -X GET \
+                "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs" \
+                -f branch=main \
+                -f event=push \
+                -f head_sha="${EXPECTED_SHA}" \
+                -f status=success \
+                -f per_page=100
+            )"
+            MATCHES="$(
+              jq \
+                --arg sha "${EXPECTED_SHA}" \
+                '[.workflow_runs[] | select(
+                  .head_sha == $sha and
+                  .head_branch == "main" and
+                  .event == "push" and
+                  .status == "completed" and
+                  .conclusion == "success"
+                )] | length' \
+                <<<"${RUNS}"
+            )"
+            if [ "${MATCHES}" -gt 0 ]; then
+              echo "Exact-SHA CI succeeded for ${EXPECTED_SHA}."
+              break
+            fi
+            sleep 15
+          done
+
+          if [ "${MATCHES}" -le 0 ]; then
+            echo "No successful main push CI completed for ${EXPECTED_SHA} within 1800 seconds." >&2
+            exit 1
+          fi
+
       - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
           registry-url: "https://registry.npmjs.org"
           cache: npm
+
+      - name: Verify release runtime
+        run: |
+          set -euo pipefail
+
+          ACTUAL_NODE="$(node --version | sed 's/^v//')"
+          if [ "${ACTUAL_NODE%%.*}" != "24" ]; then
+            echo "Expected Node.js 24, found ${ACTUAL_NODE}." >&2
+            exit 1
+          fi
+
+          ACTUAL_NPM="$(npm --version)"
+          node - "${ACTUAL_NPM}" <<'NODE'
+          const actual = process.argv[2].split(".").map(Number);
+          const minimum = "11.5.1".split(".").map(Number);
+          for (let index = 0; index < 3; index += 1) {
+            if (actual[index] > minimum[index]) process.exit(0);
+            if (actual[index] < minimum[index]) process.exit(1);
+          }
+          process.exit(0);
+          NODE
+
+          echo "Using Node.js ${ACTUAL_NODE} and npm ${ACTUAL_NPM}."
 
       - name: Use prepared release metadata
         id: release
@@ -81,35 +159,6 @@ jobs:
             echo "should_finalize_release=true"
             echo "skip_reason=${SKIP_REASON}"
           } >> "$GITHUB_OUTPUT"
-
-      - name: Verify exact-SHA CI
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMIT_SHA: ${{ needs.prepare_release.outputs.commit_sha }}
-        run: |
-          set -euo pipefail
-
-          DEADLINE=$((SECONDS + 1200))
-          while [ "${SECONDS}" -lt "${DEADLINE}" ]; do
-            RUNS="$(gh run list --workflow ci.yml --commit "${COMMIT_SHA}" --limit 20 --json databaseId,status,conclusion,headSha,event)"
-
-            if jq -e --arg sha "${COMMIT_SHA}" '[.[] | select(.headSha == $sha and .conclusion == "success")] | length > 0' <<< "${RUNS}" >/dev/null; then
-              echo "CI succeeded for exact prepared commit ${COMMIT_SHA}."
-              exit 0
-            fi
-
-            if jq -e --arg sha "${COMMIT_SHA}" '[.[] | select(.headSha == $sha and ((.conclusion // "") == "failure" or (.conclusion // "") == "cancelled" or (.conclusion // "") == "timed_out" or (.conclusion // "") == "startup_failure" or (.conclusion // "") == "action_required"))] | length > 0' <<< "${RUNS}" >/dev/null; then
-              echo "CI failed for exact prepared commit ${COMMIT_SHA}." >&2
-              jq -r --arg sha "${COMMIT_SHA}" '.[] | select(.headSha == $sha) | "run=\(.databaseId) status=\(.status) conclusion=\(.conclusion // "pending") event=\(.event)"' <<< "${RUNS}" >&2
-              exit 1
-            fi
-
-            echo "Waiting for CI on exact prepared commit ${COMMIT_SHA}."
-            sleep 15
-          done
-
-          echo "Timed out waiting for CI on exact prepared commit ${COMMIT_SHA}." >&2
-          exit 1
 
       - name: Skip when package version is already published
         if: steps.release.outputs.should_publish_npm != 'true'
