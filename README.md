@@ -322,7 +322,8 @@ with `bump=patch` and a blank `preid`. The release-preparation job selects a
 version higher than the package manifest, npm registry, and existing tags. At
 the current `0.3.0` release state, that allocates `0.3.1` and never reuses the
 published `0.3.0` version. Release publication remains bound to the exact
-prepared commit that passed CI.
+prepared commit while it is still the `main` head, after push-triggered CI for
+that SHA, and requires Node 24 with npm 11.5.1 or newer.
 
 Rollback is operational: cancel or disable the affected CD workflow/channel,
 leave immutable npm and GitHub release artifacts untouched, and restore service

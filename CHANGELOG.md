@@ -7,9 +7,13 @@
 
 - **Changed**
   - Updated npm publication to use only GitHub OIDC trusted publishing from the production environment with job-scoped permissions.
+  - Replaced the weaker release CI poll with exact-`main`, push-event, exact-SHA admission and a Node 24/npm 11.5.1-or-newer runtime guard.
+  - Enabled exact-head manual CI dispatch for reviewed release validation.
   - (placeholder)
 
 - **Fixed**
+  - Disabled package-manager caching on self-hosted CI to prevent cache-save
+    cleanup stalls from blocking the validation queue.
   - Gave the real-Git release snapshot integration test a dedicated bounded
     execution budget and bounded every child process, avoiding false CI
     failures under self-hosted runner contention without permitting hangs.
@@ -23,6 +27,7 @@
 - **Security**
   - Added fail-closed source and npm-package admission for the administrative contributor registry and pinned the CI/CD runtime to Node.js 24.18.0 LTS.
   - Removed the repository's long-lived npm write-token fallback from `.npmrc` and the publish workflow.
+  - Enabled same-repository pull-request CI while preventing external forks and `pull_request_target` from executing repository code on self-hosted runners.
   - Pinned patched transitive build-tool dependencies for the current npm audit advisories.
   - (placeholder)
 
