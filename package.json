@@ -81,18 +81,18 @@
   "homepage": "https://github.com/Plasius-LTD/asset-pipeline#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.59.3",
-    "@typescript-eslint/parser": "^8.59.3",
-    "@vitest/coverage-v8": "^4.1.6",
-    "esbuild": "^0.28.1",
-    "eslint": "^10.6.0",
-    "globals": "^17.6.0",
+    "@types/node": "^26.4.0",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/parser": "^8.69.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.9.1",
+    "globals": "^17.11.0",
     "rimraf": "^6.1.3",
     "tsup": "^8.5.1",
-    "tsx": "^4.21.0",
+    "tsx": "^4.23.13",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.11"
   },
   "publishConfig": {
     "access": "public"
@@ -117,8 +117,8 @@
     "postcss": "8.5.23"
   },
   "dependencies": {
-    "@plasius/asset-contracts": "^0.3.1",
+    "@plasius/asset-contracts": "^0.4.0",
     "@plasius/asset-processing": "^0.2.0",
-    "@plasius/gpu-shader": "^0.1.1"
+    "@plasius/gpu-shader": "^0.1.3"
   }
 }
