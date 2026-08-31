@@ -8,6 +8,7 @@
 - **Changed**
   - Updated npm publication to use only GitHub OIDC trusted publishing from the production environment with job-scoped permissions.
   - Replaced the weaker release CI poll with exact-`main`, push-event, exact-SHA admission and a Node 24/npm 11.5.1-or-newer runtime guard.
+  - Enabled exact-head manual CI dispatch for reviewed release validation.
   - (placeholder)
 
 - **Fixed**
