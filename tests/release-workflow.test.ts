@@ -216,9 +216,7 @@ describe("public release policy", () => {
       "utf8"
     );
 
-    expect(workflow.match(/runs-on: \$\{\{ fromJSON\(github\.event_name == 'pull_request'/gu)).toHaveLength(2);
-    expect(workflow).toContain('["ubuntu-latest"]');
-    expect(workflow).toContain('["self-hosted","Linux","X64"]');
+    expect(workflow.match(/runs-on: ubuntu-latest/gu)).toHaveLength(2);
     expect(workflow).toContain("pull_request:");
     expect(workflow).toContain("workflow_dispatch:");
     expect(workflow).not.toMatch(/\n\s+cache:\s*["']?npm["']?/u);
