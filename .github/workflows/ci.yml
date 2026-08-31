@@ -13,7 +13,9 @@ permissions:
 jobs:
   build-test:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: [self-hosted, Linux, X64]
+    runs-on:
+      group: Public CI - Quarantined
+      labels: [self-hosted, Linux, X64]
     steps:
       - uses: actions/checkout@v4
 
@@ -121,7 +123,9 @@ jobs:
   public_artifact_integrity:
     name: Public artifact integrity
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: [self-hosted, Linux, X64]
+    runs-on:
+      group: Public CI - Quarantined
+      labels: [self-hosted, Linux, X64]
     timeout-minutes: 10
     permissions:
       contents: read
