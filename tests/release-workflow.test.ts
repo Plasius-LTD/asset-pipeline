@@ -216,7 +216,12 @@ describe("public release policy", () => {
       "utf8"
     );
 
-    expect(workflow).toContain("runs-on: [self-hosted, Linux, X64]");
+    expect(
+      workflow.match(/runs-on:\n {6}group: Public CI - Quarantined/gu),
+    ).toHaveLength(2);
+    expect(
+      workflow.match(/labels: \[self-hosted, Linux, X64\]/gu),
+    ).toHaveLength(2);
     expect(workflow).toContain("pull_request:");
     expect(workflow).toContain("workflow_dispatch:");
     expect(workflow).not.toMatch(/\n\s+cache:\s*["']?npm["']?/u);
