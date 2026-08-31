@@ -12,6 +12,8 @@
   - (placeholder)
 
 - **Fixed**
+  - Disabled package-manager caching on self-hosted CI to prevent cache-save
+    cleanup stalls from blocking the validation queue.
   - Gave the real-Git release snapshot integration test a dedicated bounded
     execution budget and bounded every child process, avoiding false CI
     failures under self-hosted runner contention without permitting hangs.
