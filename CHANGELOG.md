@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Refresh npm dependency lockfile to current supported stable versions (weekly maintenance, 2026-09-28). Refresh published Plasius package baselines after upstream releases.
+
 - **Added**
   - (placeholder)
 
