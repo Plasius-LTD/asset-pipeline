@@ -117,8 +117,8 @@
     "postcss": "8.5.23"
   },
   "dependencies": {
-    "@plasius/asset-contracts": "^0.4.2",
-    "@plasius/asset-processing": "^0.2.1",
-    "@plasius/gpu-shader": "^0.1.7"
+    "@plasius/asset-contracts": "^0.4.3",
+    "@plasius/asset-processing": "^0.2.2",
+    "@plasius/gpu-shader": "^0.1.8"
   }
 }
