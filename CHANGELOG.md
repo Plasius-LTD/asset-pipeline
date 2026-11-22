@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.3.6] - 2026-11-22
+
 - Consume the verified upstream security releases from the weekly dependency rollout; retain existing runtime contracts.
 
 - **Added**
@@ -250,3 +264,4 @@
 [0.3.3]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.3.3
 [0.3.4]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.3.4
 [0.3.5]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.3.5
+[0.3.6]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.3.6
