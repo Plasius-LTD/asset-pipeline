@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.3.5] - 2026-11-22
+
 - Refresh supported npm dependency and security tooling baselines; preserve runtime API contracts (weekly maintenance, 2026-11-22).
 
 - **Added**
@@ -233,3 +247,4 @@
 [0.3.2]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.3.2
 [0.3.3]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.3.3
 [0.3.4]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.3.4
+[0.3.5]: https://github.com/Plasius-LTD/asset-pipeline/releases/tag/v0.3.5
